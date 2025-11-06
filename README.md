@@ -78,7 +78,7 @@ Data:     Faker (1K authors, 3K categories, 100K books, 500K ratings)
 ### 1. Clone & Install
 ```bash
 git clone https://github.com/IdaDanuartha/timedoor-backend-exam.git
-cd johns-bookstore
+cd timedoor-backend-exam
 composer install
 ```
 
@@ -97,15 +97,12 @@ DB_PORT=3306
 DB_DATABASE=bookstore
 DB_USERNAME=root
 DB_PASSWORD=your_password
-
-# Important: No caching
-CACHE_DRIVER=array
 ```
 
 ### 4. Create Database
 ```bash
 mysql -u root -p
-CREATE DATABASE bookstore CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE bookstore;
 EXIT;
 ```
 
@@ -113,7 +110,7 @@ EXIT;
 ```bash
 php artisan migrate
 php artisan db:seed
-# Seeding: ~8-12 menit untuk semua data
+# Seeding: ~23-27 detik untuk semua data
 ```
 
 ### 6. Start Server

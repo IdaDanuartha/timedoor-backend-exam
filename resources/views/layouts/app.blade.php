@@ -33,7 +33,7 @@
                 <div class="flex">
                     <div class="shrink-0 flex items-center">
                         <i class="fas fa-book-open text-blue-600 text-2xl mr-2"></i>
-                        <span class="text-xl font-bold text-gray-800">John's Bookstore</span>
+                        <span class="text-xl font-bold text-gray-800">Timedoor Bookstore</span>
                     </div>
                     <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                         <a href="{{ route('books.index') }}" 
@@ -83,7 +83,7 @@
     <footer class="bg-white border-t border-gray-200 mt-12">
         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
             <p class="text-center text-gray-500 text-sm">
-                &copy; {{ date('Y') }} John's Bookstore. All rights reserved.
+                &copy; {{ date('Y') }} Timedoor Bookstore. All rights reserved.
             </p>
         </div>
     </footer>

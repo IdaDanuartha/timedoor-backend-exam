@@ -45,10 +45,8 @@ class RatingController extends Controller
             return back()->withErrors(['book_id' => 'The selected book does not belong to the chosen author.'])->withInput();
         }
 
-        // Get user identifier (IP address + User Agent hash)
         $userIdentifier = md5($request->ip() . $request->userAgent());
 
-        // Check if user has rated any book in the last 24 hours
         $lastRating = Rating::where('user_identifier', $userIdentifier)
             ->where('created_at', '>=', now()->subHours(24))
             ->first();
@@ -56,7 +54,6 @@ class RatingController extends Controller
         if ($lastRating) {
             $secondsPassed = abs(now()->diffInSeconds($lastRating->created_at, false)); 
 
-            // Kalau last rating dibuat di masa lalu, maka sisanya = 86400 - selisih
             $secondsRemaining = max(0, 86400 - $secondsPassed);
 
             $hours = floor($secondsRemaining / 3600);

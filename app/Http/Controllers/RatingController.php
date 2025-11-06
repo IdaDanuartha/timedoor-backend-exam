@@ -6,6 +6,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Rating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class RatingController extends Controller
 {
@@ -39,7 +40,7 @@ class RatingController extends Controller
             'review' => 'nullable|string|max:1000',
         ]);
 
-        // Verify book belongs to selected author
+        // Verify book belongs to author
         $book = Book::findOrFail($request->book_id);
         if ($book->author_id != $request->author_id) {
             return back()->withErrors(['book_id' => 'The selected book does not belong to the chosen author.'])->withInput();
@@ -47,38 +48,27 @@ class RatingController extends Controller
 
         $userIdentifier = md5($request->ip() . $request->userAgent());
 
-        $lastRating = Rating::where('user_identifier', $userIdentifier)
-            ->where('created_at', '>=', now()->subHours(24))
+        // 24-hour cooldown
+        $recentRating = Rating::where('user_identifier', $userIdentifier)
+            ->where('created_at', '>=', now()->subDay())
+            ->latest('created_at')
             ->first();
 
-        if ($lastRating) {
-            $secondsPassed = abs(now()->diffInSeconds($lastRating->created_at, false)); 
-
-            $secondsRemaining = max(0, 86400 - $secondsPassed);
-
-            $hours = floor($secondsRemaining / 3600);
-            $minutes = floor(($secondsRemaining % 3600) / 60);
-            $seconds = $secondsRemaining % 60;
-
-            $formatted = sprintf('%d jam %d menit %d detik', $hours, $minutes, $seconds);
-
+        if ($recentRating) {
+            $hoursLeft = max(0, floor(24 - now()->diffInHours($recentRating->created_at)));
             return back()->withErrors([
-                'rating' => "Kamu harus menunggu {$formatted} lagi sebelum bisa memberikan rating baru."
+                'rating' => "Anda harus menunggu sekitar {$hoursLeft} jam sebelum memberi rating lagi."
             ])->withInput();
         }
 
-        // Check for duplicate rating on same book
-        $existingRating = Rating::where('user_identifier', $userIdentifier)
-            ->where('book_id', $request->book_id)
-            ->first();
-
-        if ($existingRating) {
-            return back()->withErrors([
-                'book_id' => 'You have already rated this book.'
-            ])->withInput();
+        // Duplicate rating check
+        if (Rating::where('book_id', $request->book_id)
+            ->where('user_identifier', $userIdentifier)
+            ->exists()) {
+            return back()->withErrors(['book_id' => 'You have already rated this book.'])->withInput();
         }
 
-        // Create rating
+        // Save rating safely
         try {
             Rating::create([
                 'book_id' => $request->book_id,
@@ -86,14 +76,14 @@ class RatingController extends Controller
                 'rating' => $request->rating,
                 'review' => $request->review,
             ]);
-
-            return redirect()->route('books.index')
-                ->with('success', 'Thank you! Your rating has been submitted successfully.');
-        } catch (\Exception $e) {
-            logger()->error('Error creating rating: ' . $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error('Error creating rating: '.$e->getMessage());
             return back()->withErrors([
-                'error' => 'An error occurred while submitting your rating. Please try again.'
+                'error' => 'An error occurred while saving your rating. Please try again.'
             ])->withInput();
         }
+
+        return redirect()->route('books.index')
+            ->with('success', 'Thank you! Your rating has been submitted successfully.');
     }
 }

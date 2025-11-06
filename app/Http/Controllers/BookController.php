@@ -84,13 +84,14 @@ class BookController extends Controller
                 $query->orderByRaw('COUNT(ratings.id) DESC');
                 break;
             case 'recent':
+                $thirtyDaysAgo = now()->subDays(30)->toDateTimeString();
+
                 $query->orderByRaw('
-                    (AVG(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) 
-                    THEN ratings.rating ELSE NULL END) IS NULL) ASC
-                ')->orderByRaw('
-                    AVG(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) 
-                    THEN ratings.rating ELSE NULL END) DESC
-                ');
+                    (AVG(CASE WHEN ratings.created_at >= ? THEN ratings.rating END) IS NULL) ASC
+                ', [$thirtyDaysAgo])
+                ->orderByRaw('
+                    AVG(CASE WHEN ratings.created_at >= ? THEN ratings.rating END) DESC
+                ', [$thirtyDaysAgo]);
                 break;
             case 'alphabetical':
                 $query->orderBy('books.title', 'ASC');
@@ -99,15 +100,17 @@ class BookController extends Controller
                 $query->orderByRaw('AVG(ratings.rating) IS NULL, AVG(ratings.rating) DESC');
         }
 
-        $query->addSelect(DB::raw('
-            books.*,
-            AVG(ratings.rating) as avg_rating,
-            COUNT(ratings.id) as total_votes,
-            AVG(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN ratings.rating ELSE NULL END) as recent_rating,
-            AVG(CASE WHEN ratings.created_at < DATE_SUB(NOW(), INTERVAL 7 DAY)
-                     AND ratings.created_at >= DATE_SUB(NOW(), INTERVAL 14 DAY)
-                     THEN ratings.rating ELSE NULL END) as previous_rating
-        '));
+        $now = now();
+        $sevenDaysAgo = $now->copy()->subDays(7);
+        $fourteenDaysAgo = $now->copy()->subDays(14);
+
+        $query->addSelect([
+            'books.*',
+            DB::raw('AVG(ratings.rating) as avg_rating'),
+            DB::raw('COUNT(ratings.id) as total_votes'),
+            DB::raw('AVG(CASE WHEN ratings.created_at >= "' . $sevenDaysAgo . '" THEN ratings.rating END) as recent_rating'),
+            DB::raw('AVG(CASE WHEN ratings.created_at < "' . $sevenDaysAgo . '" AND ratings.created_at >= "' . $fourteenDaysAgo . '" THEN ratings.rating END) as previous_rating'),
+        ]);
 
         $books = $query->paginate(50);
 

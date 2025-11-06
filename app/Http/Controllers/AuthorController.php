@@ -46,21 +46,28 @@ class AuthorController extends Controller
                 break;
 
             case 'trending':
-                // Trending Authors (last 30 days vs previous 30 days)
-                $authors = $baseQuery
+                $now = now();
+                $recentCutoff = $now->copy()->subDays(30);
+                $previousCutoff = $now->copy()->subDays(60);
+
+                $authors = Author::select('authors.*')
+                    ->join('books', 'authors.id', '=', 'books.author_id')
+                    ->join('ratings', 'books.id', '=', 'ratings.book_id')
+                    ->groupBy('authors.id')
                     ->selectRaw('
-                        authors.*,
-                        AVG(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN ratings.rating ELSE NULL END) as recent_avg,
-                        AVG(CASE WHEN ratings.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY) AND ratings.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN ratings.rating ELSE NULL END) as previous_avg,
-                        COUNT(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 ELSE NULL END) as recent_count,
-                        COUNT(DISTINCT ratings.id) as total_ratings,
-                        (
-                            AVG(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN ratings.rating ELSE NULL END) -
-                            AVG(CASE WHEN ratings.created_at < DATE_SUB(NOW(), INTERVAL 30 DAY) AND ratings.created_at >= DATE_SUB(NOW(), INTERVAL 60 DAY) THEN ratings.rating ELSE NULL END)
-                        ) * LOG(1 + COUNT(CASE WHEN ratings.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1 ELSE NULL END)) as trending_score
-                    ')
+                        AVG(CASE WHEN ratings.created_at >= ? THEN ratings.rating END) AS recent_avg,
+                        AVG(CASE WHEN ratings.created_at < ? AND ratings.created_at >= ? THEN ratings.rating END) AS previous_avg,
+                        COUNT(CASE WHEN ratings.created_at >= ? THEN 1 END) AS recent_count
+                    ', [$recentCutoff, $recentCutoff, $previousCutoff, $recentCutoff])
                     ->havingRaw('recent_avg IS NOT NULL AND previous_avg IS NOT NULL')
-                    ->orderByRaw('trending_score DESC')
+                    ->selectRaw('
+                        (
+                            (AVG(CASE WHEN ratings.created_at >= ? THEN ratings.rating END)
+                            - AVG(CASE WHEN ratings.created_at < ? AND ratings.created_at >= ? THEN ratings.rating END))
+                            * LN(1 + COUNT(CASE WHEN ratings.created_at >= ? THEN 1 END))
+                        ) AS trending_score
+                    ', [$recentCutoff, $recentCutoff, $previousCutoff, $recentCutoff])
+                    ->orderByDesc('trending_score')
                     ->limit(20)
                     ->get();
                 break;

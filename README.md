@@ -1,8 +1,8 @@
-# John's Bookstore Management System
+# Timedoor Bookstore Management System
 
 > Sistem manajemen toko buku berbasis Laravel 12.0 untuk mengelola koleksi buku, rating, dan rekomendasi pelanggan.
 
-## 📋 Daftar Isi
+## Daftar Isi
 - [Tentang Proyek](#tentang-proyek)
 - [Fitur Utama](#fitur-utama)
 - [Teknologi](#teknologi)
@@ -13,7 +13,7 @@
 
 ---
 
-## 📚 Tentang Proyek
+## Tentang Proyek
 
 Aplikasi ini dibuat untuk membantu John Doe mengelola toko bukunya dengan fitur:
 - Manajemen 100.000+ buku
@@ -30,15 +30,15 @@ Aplikasi ini dibuat untuk membantu John Doe mengelola toko bukunya dengan fitur:
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-### 1. 📚 Daftar Buku dengan Filter
+### 1. Daftar Buku dengan Filter
 - **Filter**: Category (AND/OR logic), Author, Year, Availability, Location, Rating
 - **Search**: Title, Author, ISBN, Publisher
 - **Sort**: Rating, Votes, Recent Popularity, Alphabetical
 - **Display**: Book info, Average rating, Total voters, Trending indicator, Availability
 
-### 2. 🏆 Top 20 Penulis
+### 2. Top 20 Penulis
 **3 Ranking Tabs:**
 - **Popularity**: Berdasarkan jumlah voter (rating > 5)
 - **Rating**: Berdasarkan rata-rata rating
@@ -49,7 +49,7 @@ Aplikasi ini dibuat untuk membantu John Doe mengelola toko bukunya dengan fitur:
 - Best rated book
 - Worst rated book
 
-### 3. ⭐ Rating System
+### 3. Rating System
 - Pilih Author → Pilih Book (AJAX loading)
 - Rating scale 1-10
 - Optional review (max 1000 char)
@@ -73,11 +73,11 @@ Data:     Faker (1K authors, 3K categories, 100K books, 500K ratings)
 
 ---
 
-## 📥 Instalasi
+## Instalasi
 
 ### 1. Clone & Install
 ```bash
-git clone <repository-url>
+git clone https://github.com/IdaDanuartha/timedoor-backend-exam.git
 cd johns-bookstore
 composer install
 ```
@@ -124,13 +124,13 @@ php artisan serve
 
 ---
 
-## 🗄️ Struktur Database
+## Struktur Database
 
 ### Tables & Relationships
 
 ```
 authors (1,000 records)
-  ├─ id, name, email, bio, country
+  ├─ id, name, email, bio
   └─ has many → books
 
 categories (3,000 records)
@@ -164,7 +164,7 @@ ratings: (book_id, created_at)
 
 ---
 
-## 📖 Penggunaan
+## Penggunaan
 
 ### Halaman 1: Daftar Buku
 **URL:** `http://localhost:8000/books`
@@ -225,7 +225,7 @@ Trending Score = (Avg 30 hari terakhir - Avg 30 hari sebelumnya) × log(Jumlah v
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Problem 1: Seeding Lama
 **Solusi:**
@@ -274,16 +274,16 @@ tail -f storage/logs/laravel.log
 
 ---
 
-## 📊 Performa
+## Performa
 
 ### Seeding Time
 ```
-Authors:     ~2 seconds    (1,000 records)
-Categories:  ~6 seconds    (3,000 records)
-Books:       ~2-3 minutes  (100,000 records)
-Ratings:     ~3-5 minutes  (500,000 records)
+Authors:     ~200-500 miliseconds    (1,000 records)
+Categories:  ~500-800 miliseconds    (3,000 records)
+Books:       ~10-12 seconds          (100,000 records)
+Ratings:     ~12-14 seconds          (500,000 records)
 -------------------------------------------
-Total:       ~8-12 minutes
+Total:       ~23-27 seconds
 ```
 
 ### Query Performance
@@ -304,7 +304,7 @@ Index Size:     ~200-300 MB
 
 ---
 
-## 📝 Development Notes
+## Development Notes
 
 ### Testing Mode (Quick)
 ```php
@@ -316,7 +316,6 @@ RatingSeeder:    $totalRatings = 5000;
 
 // Run
 php artisan migrate:fresh --seed
-// Time: ~30 detik
 ```
 
 ### Production Mode (Full)
@@ -329,7 +328,6 @@ RatingSeeder:    $totalRatings = 500000;
 
 // Run
 php artisan migrate:fresh --seed
-// Time: ~8-12 menit
 ```
 
 ### Selective Seeding
@@ -343,7 +341,7 @@ php artisan db:seed --class=BookSeeder
 
 ---
 
-## 🎯 Key Features Summary
+## Key Features Summary
 
 | Feature | Description |
 |---------|-------------|
@@ -358,7 +356,7 @@ php artisan db:seed --class=BookSeeder
 
 ---
 
-## 📞 Support
+## Support
 
 Jika mengalami masalah:
 1. Check `storage/logs/laravel.log`
@@ -369,8 +367,8 @@ Jika mengalami masalah:
 
 ---
 
-## 📄 License
+## License
 
-This project is for educational and business purposes.
+This project is for educational purposes.
 
-**Created for John Doe's Bookstore** 📚
+**Created for Timedoor Bookstore**

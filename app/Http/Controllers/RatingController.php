@@ -6,7 +6,9 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Rating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RatingController extends Controller
 {
@@ -40,13 +42,18 @@ class RatingController extends Controller
             'review' => 'nullable|string|max:1000',
         ]);
 
-        // Verify book belongs to author
+        // Cek relasi author dan book
         $book = Book::findOrFail($request->book_id);
         if ($book->author_id != $request->author_id) {
             return back()->withErrors(['book_id' => 'The selected book does not belong to the chosen author.'])->withInput();
         }
 
-        $userIdentifier = md5($request->ip() . $request->userAgent());
+        // Ambil user_identifier dari cookies, kalau belum ada buat baru
+        $userIdentifier = Cookie::get('user_identifier');
+        if (!$userIdentifier) {
+            $userIdentifier = Str::uuid()->toString();
+            Cookie::queue('user_identifier', $userIdentifier, 60 * 24 * 30); // 30 hari
+        }
 
         // 24-hour cooldown
         $recentRating = Rating::where('user_identifier', $userIdentifier)
@@ -61,14 +68,14 @@ class RatingController extends Controller
             ])->withInput();
         }
 
-        // Duplicate rating check
+        // Cek duplikat rating
         if (Rating::where('book_id', $request->book_id)
             ->where('user_identifier', $userIdentifier)
             ->exists()) {
-            return back()->withErrors(['book_id' => 'You have already rated this book.'])->withInput();
+            return back()->withErrors(['book_id' => 'Anda sudah memberi rating untuk buku ini.'])->withInput();
         }
 
-        // Save rating safely
+        // Simpan rating
         try {
             Rating::create([
                 'book_id' => $request->book_id,
@@ -77,13 +84,11 @@ class RatingController extends Controller
                 'review' => $request->review,
             ]);
         } catch (\Throwable $e) {
-            Log::error('Error creating rating: '.$e->getMessage());
-            return back()->withErrors([
-                'error' => 'An error occurred while saving your rating. Please try again.'
-            ])->withInput();
+            Log::error('Error creating rating: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat menyimpan rating.'])->withInput();
         }
 
         return redirect()->route('books.index')
-            ->with('success', 'Thank you! Your rating has been submitted successfully.');
+            ->with('success', 'Terima kasih! Rating Anda berhasil dikirim.');
     }
 }

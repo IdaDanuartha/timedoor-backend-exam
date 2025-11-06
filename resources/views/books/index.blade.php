@@ -209,10 +209,22 @@
                 </div>
 
                 <div class="ml-6 text-right">
-                    <div class="text-3xl font-bold text-blue-600">
-                        {{ $book->avg_rating ? number_format($book->avg_rating, 1) : 'N/A' }}
-                        @if($book->avg_rating)
-                        <span class="text-lg text-gray-400">/10</span>
+                    <div class="flex items-center justify-end space-x-2">
+                        <div class="text-3xl font-bold text-blue-600">
+                            {{ $book->avg_rating ? number_format($book->avg_rating, 1) : 'N/A' }}
+                            @if($book->avg_rating)
+                                <span class="text-lg text-gray-400">/10</span>
+                            @endif
+                        </div>
+
+                        @if(!is_null($book->recent_rating) && !is_null($book->previous_rating))
+                            @if($book->recent_rating > $book->previous_rating)
+                                <i class="fas fa-arrow-up text-green-600 text-xl" title="Rating improved in last 7 days"></i>
+                            @elseif($book->recent_rating < $book->previous_rating)
+                                <i class="fas fa-arrow-down text-red-600 text-xl" title="Rating decreased in last 7 days"></i>
+                            @else
+                                <i class="fas fa-minus text-gray-400 text-xl" title="Rating unchanged"></i>
+                            @endif
                         @endif
                     </div>
                     <div class="text-sm text-gray-500 mt-1">
